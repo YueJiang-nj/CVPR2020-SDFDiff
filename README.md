@@ -85,3 +85,27 @@ You can make it weighted. loss = a * image_loss[cam] + b * sdf_loss[cam] + c * L
 In the line: voxel_res_list = [8,16,24,32,40,48,56,64]
 You can add more intermediate resolutions in the list. It can also produce better results when we have more intermediate resolutions.
 ```
+
+## Generating SDF from Mesh
+
+If you have a mesh file xxx.obj, you need to generate SDF from the mesh file to run our SDFDiff code.
+
+First, you need to git clone the following tools.
+
+```
+# a tool to generate watertight meshes from arbitrary meshes
+git clone https://github.com/hjwdzh/Manifold.git
+
+# A tool to generate SDF from watertight meshes
+git clone https://github.com/christopherbatty/SDFGen.git
+```
+
+Then you can run the following to get SDF from your mesh file xxx.obj.
+
+```
+# Generate watertight meshes from arbitrary meshes
+./Manifold/build/manifold ./obj_files/xxx.obj ./watertight_meshes_and_sdfs/xxx.obj
+
+# Generate SDF from watertight meshes
+./SDFGen/build/bin/SDFGen ./watertight_meshes_and_sdfs/xxx.obj 0.002 0 
+```
