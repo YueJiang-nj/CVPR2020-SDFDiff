@@ -21,12 +21,12 @@ Authors: **Yue Jiang, Dantong Ji, Zhizhong Han, Matthias Zwicker**
 SDFDiff has been implemented and tested on Ubuntu 18.04 with python >= 3.7.
 
 Clone the repo:
-```
+``` bash
     git clone https://github.com/YueJiang-nj/CVPR2020-SDFDiff.git
 ```
 
 Install the requirements using `virtualenv` or `conda`:
-```
+``` bash
 # pip
 source virtual_env/install_pip.sh
 
@@ -66,7 +66,7 @@ We have prepared a demo to run SDFDiff on a bunny object.
 
 To run the multi-view 3D reconstruction on bunny, you can follow the following steps in the folder multi_view_code/code:
 
-```
+``` bash
 1. You need to run “python setup.py install” to compile our SDF differentiable renderer.
 
 2. Once built, you can execute the bunny reconstruction example via “python main.py”
@@ -92,7 +92,7 @@ If you have a mesh file xxx.obj, you need to generate SDF from the mesh file to 
 
 First, you need to git clone the following tools.
 
-```
+``` bash
 # a tool to generate watertight meshes from arbitrary meshes
 git clone https://github.com/hjwdzh/Manifold.git
 
@@ -102,10 +102,21 @@ git clone https://github.com/christopherbatty/SDFGen.git
 
 Then you can run the following to get SDF from your mesh file xxx.obj.
 
-```
+``` bash
 # Generate watertight meshes from arbitrary meshes
 ./Manifold/build/manifold ./obj_files/xxx.obj ./watertight_meshes_and_sdfs/xxx.obj
 
 # Generate SDF from watertight meshes
 ./SDFGen/build/bin/SDFGen ./watertight_meshes_and_sdfs/xxx.obj 0.002 0 
+```
+
+## Citation
+```bibtex
+@InProceedings{jiang2020sdfdiff,
+author = {Jiang, Yue and Ji, Dantong and Han, Zhizhong and Zwicker, Matthias},
+title = {SDFDiff: Differentiable Rendering of Signed Distance Fields for 3D Shape Optimization},
+booktitle = {The IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+month = {June},
+year = {2020}
+}
 ```
