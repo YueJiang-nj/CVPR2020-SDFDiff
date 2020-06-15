@@ -22,7 +22,7 @@ SDFDiff has been implemented and tested on Ubuntu 18.04 with python >= 3.7.
 
 Clone the repo:
 ``` bash
-    git clone https://github.com/YueJiang-nj/CVPR2020-SDFDiff.git
+git clone https://github.com/YueJiang-nj/CVPR2020-SDFDiff.git
 ```
 
 Install the requirements using `virtualenv` or `conda`:
