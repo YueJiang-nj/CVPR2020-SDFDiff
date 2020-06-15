@@ -7,10 +7,6 @@ Authors: **Yue Jiang, Dantong Ji, Zhizhong Han, Matthias Zwicker**
 **Paper:** http://www.cs.umd.edu/~yuejiang/papers/SDFDiff.pdf
 
 **Video:** https://www.youtube.com/watch?v=l3h9JZHAOqI&t=13s
-
-> **To get started:** 
-> 
->     git clone https://github.com/YueJiang-nj/CVPR2020-SDFDiff.git
 >
 
 ## Prerequisite installation
@@ -18,6 +14,26 @@ Authors: **Yue Jiang, Dantong Ji, Zhizhong Han, Matthias Zwicker**
     1. Python3 
     2. CUDA10
     3. Pytorch
+
+
+> **To get started:** 
+
+SDFDiff has been implemented and tested on Ubuntu 18.04 with python >= 3.7.
+
+Clone the repo:
+> 
+>     git clone https://github.com/YueJiang-nj/CVPR2020-SDFDiff.git
+
+
+Install the requirements using `virtualenv` or `conda`:
+```
+# pip
+source scripts/install_pip.sh
+
+# conda
+source scripts/install_conda.sh
+```
+
 
 ## Layout
 
