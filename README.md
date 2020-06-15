@@ -113,10 +113,10 @@ Then you can run the following to get SDF from your mesh file xxx.obj.
 ## Citation
 ```bibtex
 @InProceedings{jiang2020sdfdiff,
-author = {Jiang, Yue and Ji, Dantong and Han, Zhizhong and Zwicker, Matthias},
-title = {SDFDiff: Differentiable Rendering of Signed Distance Fields for 3D Shape Optimization},
-booktitle = {The IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-month = {June},
-year = {2020}
+    author = {Jiang, Yue and Ji, Dantong and Han, Zhizhong and Zwicker, Matthias},
+    title = {SDFDiff: Differentiable Rendering of Signed Distance Fields for 3D Shape Optimization},
+    booktitle = {The IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month = {June},
+    year = {2020} 
 }
 ```
