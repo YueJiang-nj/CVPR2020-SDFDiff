@@ -9,14 +9,14 @@ Authors: **Yue Jiang, Dantong Ji, Zhizhong Han, Matthias Zwicker**
 **Video:** https://www.youtube.com/watch?v=l3h9JZHAOqI&t=13s
 >
 
-## Prerequisite installation
+## Prerequisite Installation
 
     1. Python3 
     2. CUDA10
     3. Pytorch
 
 
-## To get started: 
+## To Get Started: 
 
 SDFDiff has been implemented and tested on Ubuntu 18.04 with python >= 3.7.
 
@@ -70,4 +70,18 @@ To run the multi-view 3D reconstruction on bunny, you can follow the following s
 1. You need to run “python setup.py install” to compile our SDF differentiable renderer.
 
 2. Once built, you can execute the bunny reconstruction example via “python main.py”
+```
+
+## Parameter Tuning
+
+There are two kinds of parameters you can modify to get better results:
+
+```
+1. Weighted Loss
+In the line: loss = image_loss[cam] + sdf_loss[cam] + Lp_loss
+You can make it weighted. loss = a * image_loss[cam] + b * sdf_loss[cam] + c * Lp_loss and try different a, b, c. For example, the surface would be smoother if you increase c.
+
+2. Intermediate Resolutions
+In the line: voxel_res_list = [8,16,24,32,40,48,56,64]
+You can add more intermediate resolutions in the list. It can also produce better results when we have more intermediate resolutions.
 ```
