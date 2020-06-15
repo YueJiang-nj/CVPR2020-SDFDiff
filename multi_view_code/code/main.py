@@ -3,10 +3,10 @@ import torch
 import math
 import torchvision
 from torch.autograd import Variable
-import matplotlib.pyplot as plt
 import renderer
 import time
 import sys, os
+import torch.nn.functional as F
 from torchvision.utils import save_image, make_grid
 
 def read_txt(file_path, grid_res_x, grid_res_y, grid_res_z):
@@ -727,18 +727,28 @@ if __name__ == "__main__":
     voxel_size, grid_res_x, grid_res_y, grid_res_z, width, height, grid_initial, camera_list[cam], 1, camera_list)    
 
                     # Perform backprobagation
+                    # compute image loss and sdf loss
                     image_loss[cam], sdf_loss[cam] = loss_fn(image_initial, image_target[cam], grid_initial, voxel_size, grid_res_x, grid_res_y, grid_res_z, width, height)
-                    loss = image_loss[cam] + sdf_loss[cam]
+
+                    # compute laplacian loss
+                    conv_input = (grid_initial).unsqueeze(0).unsqueeze(0)
+                    conv_filter = torch.cuda.FloatTensor([[[[[0, 0, 0], [0, 1, 0], [0, 0, 0]], [[0, 1, 0], [1, -6, 1], [0, 1, 0]], [[0, 0, 0], [0, 1, 0], [0, 0, 0]]]]])
+                    Lp_loss = torch.sum(F.conv3d(conv_input, conv_filter) ** 2)
+
+                    # get total loss
+                    loss = image_loss[cam] + sdf_loss[cam] + Lp_loss
                     image_loss[cam] = image_loss[cam] / len(camera_list)
                     sdf_loss[cam] = sdf_loss[cam] / len(camera_list)
                     loss_camera[cam] = image_loss[cam] + sdf_loss[cam]          
                     
+                    # print out loss messages
                     print("grid res:", grid_res_x, "iteration:", i, "num:", num, "loss:", loss, "\ncamera:", camera_list[cam])
                     loss.backward()
                     optimizer.step()                
 
             i += 1
 
+        # genetate result images
         for cam in range(len(camera_list)):
             image_initial = generate_image(bounding_box_min_x, bounding_box_min_y, bounding_box_min_z, \
         bounding_box_max_x, bounding_box_max_y, bounding_box_max_z, \
@@ -751,48 +761,49 @@ if __name__ == "__main__":
             torch.save(grid_initial, f) 
 
         # moves on to the next resolution stage 
-        grid_res_update_x = grid_res_update_y = grid_res_update_z = voxel_res_list.pop(0)
-        voxel_size_update = (bounding_box_max_x - bounding_box_min_x) / (grid_res_update_x - 1)
-        grid_initial_update = Tensor(grid_res_update_x, grid_res_update_y, grid_res_update_z)
-        linear_space_x = torch.linspace(0, grid_res_update_x-1, grid_res_update_x)
-        linear_space_y = torch.linspace(0, grid_res_update_y-1, grid_res_update_y)
-        linear_space_z = torch.linspace(0, grid_res_update_z-1, grid_res_update_z)
-        first_loop = linear_space_x.repeat(grid_res_update_y * grid_res_update_z, 1).t().contiguous().view(-1).unsqueeze_(1)
-        second_loop = linear_space_y.repeat(grid_res_update_z, grid_res_update_x).t().contiguous().view(-1).unsqueeze_(1)
-        third_loop = linear_space_z.repeat(grid_res_update_x * grid_res_update_y).unsqueeze_(1)
-        loop = torch.cat((first_loop, second_loop, third_loop), 1).cuda()
-        min_x = Tensor([bounding_box_min_x]).repeat(grid_res_update_x*grid_res_update_y*grid_res_update_z, 1)
-        min_y = Tensor([bounding_box_min_y]).repeat(grid_res_update_x*grid_res_update_y*grid_res_update_z, 1)
-        min_z = Tensor([bounding_box_min_z]).repeat(grid_res_update_x*grid_res_update_y*grid_res_update_z, 1)
-        bounding_min_matrix = torch.cat((min_x, min_y, min_z), 1)
+        if grid_res_x < 64:
+            grid_res_update_x = grid_res_update_y = grid_res_update_z = voxel_res_list.pop(0)
+            voxel_size_update = (bounding_box_max_x - bounding_box_min_x) / (grid_res_update_x - 1)
+            grid_initial_update = Tensor(grid_res_update_x, grid_res_update_y, grid_res_update_z)
+            linear_space_x = torch.linspace(0, grid_res_update_x-1, grid_res_update_x)
+            linear_space_y = torch.linspace(0, grid_res_update_y-1, grid_res_update_y)
+            linear_space_z = torch.linspace(0, grid_res_update_z-1, grid_res_update_z)
+            first_loop = linear_space_x.repeat(grid_res_update_y * grid_res_update_z, 1).t().contiguous().view(-1).unsqueeze_(1)
+            second_loop = linear_space_y.repeat(grid_res_update_z, grid_res_update_x).t().contiguous().view(-1).unsqueeze_(1)
+            third_loop = linear_space_z.repeat(grid_res_update_x * grid_res_update_y).unsqueeze_(1)
+            loop = torch.cat((first_loop, second_loop, third_loop), 1).cuda()
+            min_x = Tensor([bounding_box_min_x]).repeat(grid_res_update_x*grid_res_update_y*grid_res_update_z, 1)
+            min_y = Tensor([bounding_box_min_y]).repeat(grid_res_update_x*grid_res_update_y*grid_res_update_z, 1)
+            min_z = Tensor([bounding_box_min_z]).repeat(grid_res_update_x*grid_res_update_y*grid_res_update_z, 1)
+            bounding_min_matrix = torch.cat((min_x, min_y, min_z), 1)
 
-        # Get the position of the grid points in the refined grid
-        points = bounding_min_matrix + voxel_size_update * loop
-        voxel_min_point_index_x = torch.floor((points[:,0].unsqueeze_(1) - min_x) / voxel_size).clamp(max=grid_res_x-2)
-        voxel_min_point_index_y = torch.floor((points[:,1].unsqueeze_(1) - min_y) / voxel_size).clamp(max=grid_res_y-2)
-        voxel_min_point_index_z = torch.floor((points[:,2].unsqueeze_(1) - min_z) / voxel_size).clamp(max=grid_res_z-2)
-        voxel_min_point_index = torch.cat((voxel_min_point_index_x, voxel_min_point_index_y, voxel_min_point_index_z), 1)
-        voxel_min_point = bounding_min_matrix + voxel_min_point_index * voxel_size
+            # Get the position of the grid points in the refined grid
+            points = bounding_min_matrix + voxel_size_update * loop
+            voxel_min_point_index_x = torch.floor((points[:,0].unsqueeze_(1) - min_x) / voxel_size).clamp(max=grid_res_x-2)
+            voxel_min_point_index_y = torch.floor((points[:,1].unsqueeze_(1) - min_y) / voxel_size).clamp(max=grid_res_y-2)
+            voxel_min_point_index_z = torch.floor((points[:,2].unsqueeze_(1) - min_z) / voxel_size).clamp(max=grid_res_z-2)
+            voxel_min_point_index = torch.cat((voxel_min_point_index_x, voxel_min_point_index_y, voxel_min_point_index_z), 1)
+            voxel_min_point = bounding_min_matrix + voxel_min_point_index * voxel_size
 
-        # Compute the sdf value of the grid points in the refined grid
-        grid_initial_update = calculate_sdf_value(grid_initial, points, voxel_min_point, voxel_min_point_index, voxel_size, grid_res_x, grid_res_y, grid_res_z).view(grid_res_update_x, grid_res_update_y, grid_res_update_z)
+            # Compute the sdf value of the grid points in the refined grid
+            grid_initial_update = calculate_sdf_value(grid_initial, points, voxel_min_point, voxel_min_point_index, voxel_size, grid_res_x, grid_res_y, grid_res_z).view(grid_res_update_x, grid_res_update_y, grid_res_update_z)
 
-        # Update the grid resolution for the refined sdf grid
-        grid_res_x = grid_res_update_x
-        grid_res_y = grid_res_update_y
-        grid_res_z = grid_res_update_z
+            # Update the grid resolution for the refined sdf grid
+            grid_res_x = grid_res_update_x
+            grid_res_y = grid_res_update_y
+            grid_res_z = grid_res_update_z
 
-        # Update the voxel size for the refined sdf grid
-        voxel_size = voxel_size_update
+            # Update the voxel size for the refined sdf grid
+            voxel_size = voxel_size_update
 
-        # Update the sdf grid
-        grid_initial = grid_initial_update.data
+            # Update the sdf grid
+            grid_initial = grid_initial_update.data
 
-        # Double the size of the image
-        if width < 256:
-            width = int(width * 2)
-            height = int(height * 2)
-        learning_rate /= 1.03
+            # Double the size of the image
+            if width < 256:
+                width = int(width * 2)
+                height = int(height * 2)
+            learning_rate /= 1.03
 
     print("Time:", time.time() - start_time)
 
