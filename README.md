@@ -4,10 +4,14 @@
 
 Authors: **Yue Jiang, Dantong Ji, Zhizhong Han, Matthias Zwicker**
 
+**Project page:** https://yuejiang-nj.github.io/papers/CVPR2020_SDFDiff/project_page.html
+
 **Paper:** http://www.cs.umd.edu/~yuejiang/papers/SDFDiff.pdf
 
 **Video:** https://www.youtube.com/watch?v=l3h9JZHAOqI&t=13s
->
+
+**Talk:** https://youtu.be/0A83pElG5gk
+
 
 ## Prerequisite Installation
 
